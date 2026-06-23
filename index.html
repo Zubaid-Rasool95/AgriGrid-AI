@@ -198,6 +198,7 @@ body {
   transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), border-color 0.25s;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 }
 .metric-card::before {
   content: '';
@@ -244,7 +245,8 @@ body {
 .pill-red { background: #FCEBEB; color: #791F1F; }
 
 .crop-list { display: flex; flex-direction: column; gap: 10px; }
-.crop-row { display: flex; align-items: center; gap: 10px; }
+.crop-row { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 4px 6px; margin: -4px -6px; border-radius: 6px; transition: background 0.2s; }
+.crop-row:hover { background: var(--color-background-secondary); }
 .crop-name { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); width: 60px; flex-shrink: 0; }
 .progress-bg { flex: 1; height: 7px; background: var(--color-background-secondary); border-radius: 4px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(23, 52, 4, 0.06); }
 .progress-fill {
@@ -267,6 +269,7 @@ body {
   border-radius: 8px;
   border: 0.5px solid;
   transition: transform 0.2s var(--ease-out), box-shadow 0.2s;
+  cursor: pointer;
 }
 .alert-item:hover { transform: translateX(3px); box-shadow: var(--shadow-sm); }
 .alert-warn { background: var(--amber-50); border-color: #EF9F27; border-left-width: 3px; }
@@ -323,6 +326,7 @@ body {
   transition: opacity 0.2s, transform 0.2s var(--ease-out);
   animation: grow-up 0.8s var(--ease-out) both;
   transform-origin: bottom;
+  cursor: pointer;
 }
 .bar:hover { opacity: 1; transform: scaleY(1.05); }
 .bbl { background: linear-gradient(180deg, var(--blue-400), var(--blue-200)); }
@@ -346,6 +350,7 @@ body {
   border-radius: 10px;
   border: 1px solid transparent;
   transition: transform 0.2s var(--ease-out), background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
 }
 .weather-item:hover {
   transform: translateY(-2px);
@@ -370,6 +375,282 @@ body {
   to { transform: scaleY(1); }
 }
 
+/* Agent chat panel */
+.chat-overlay {
+  position: fixed; inset: 0;
+  background: rgba(23, 52, 4, 0.35);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.25s var(--ease-out), visibility 0.25s;
+}
+.chat-overlay.open { opacity: 1; visibility: visible; }
+
+.chat-panel {
+  position: fixed;
+  right: 24px; bottom: 24px;
+  width: 380px; max-width: calc(100vw - 32px);
+  height: 520px; max-height: calc(100vh - 48px);
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column;
+  z-index: 101;
+  transform: translateY(20px) scale(0.97);
+  opacity: 0; visibility: hidden;
+  transition: transform 0.3s var(--ease-out), opacity 0.3s, visibility 0.3s;
+  overflow: hidden;
+}
+.chat-panel.open { transform: translateY(0) scale(1); opacity: 1; visibility: visible; }
+
+.chat-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(90deg, var(--green-900), var(--green-800));
+  color: #fff;
+  flex-shrink: 0;
+}
+.chat-header-info { display: flex; align-items: center; gap: 10px; }
+.chat-agent-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.15);
+}
+.chat-agent-icon i { font-size: 17px; }
+.chat-agent-name { font-size: 14px; font-weight: 600; }
+.chat-agent-status { font-size: 10px; opacity: 0.85; margin-top: 1px; }
+.chat-close {
+  width: 30px; height: 30px; border: none; border-radius: 8px;
+  background: rgba(255,255,255,0.12); color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.chat-close:hover { background: rgba(255,255,255,0.22); }
+
+.chat-messages {
+  flex: 1; overflow-y: auto; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  background: var(--color-background-tertiary);
+  scrollbar-width: thin;
+}
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--color-border-secondary); border-radius: 4px; }
+
+.chat-msg {
+  max-width: 88%; padding: 10px 13px;
+  border-radius: 12px; font-size: 13px; line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word;
+}
+.chat-msg.user {
+  align-self: flex-end;
+  background: var(--green-800); color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.chat-msg.agent {
+  align-self: flex-start;
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--shadow-sm);
+}
+.chat-msg.error {
+  align-self: flex-start;
+  background: #FCEBEB; color: #791F1F;
+  border: 0.5px solid #F0A0A0;
+  font-size: 12px;
+}
+.chat-msg.loading {
+  align-self: flex-start;
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  color: var(--color-text-tertiary);
+  font-size: 12px;
+}
+.chat-msg.loading::after {
+  content: '';
+  display: inline-block;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--green-600);
+  margin-left: 4px;
+  animation: pulse-dot 1s ease-in-out infinite;
+}
+
+.chat-suggestions {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 0 16px 10px;
+  background: var(--color-background-tertiary);
+  flex-shrink: 0;
+}
+.chat-suggestion {
+  font-size: 11px; padding: 5px 10px;
+  border-radius: 20px; border: 1px solid var(--color-border-tertiary);
+  background: var(--color-background-primary);
+  color: var(--color-text-secondary);
+  cursor: pointer; transition: all 0.2s;
+}
+.chat-suggestion:hover {
+  border-color: var(--green-200);
+  color: var(--green-800);
+  background: var(--green-50);
+}
+
+.chat-input-row {
+  display: flex; gap: 8px; padding: 12px 14px;
+  border-top: 0.5px solid var(--color-border-tertiary);
+  background: var(--color-background-primary);
+  flex-shrink: 0;
+}
+.chat-input {
+  flex: 1; border: 1px solid var(--color-border-tertiary);
+  border-radius: 10px; padding: 10px 12px;
+  font-size: 13px; font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background: var(--color-background-secondary);
+  outline: none; resize: none;
+  transition: border-color 0.2s;
+}
+.chat-input:focus { border-color: var(--green-200); }
+.chat-send {
+  width: 40px; height: 40px; border: none; border-radius: 10px;
+  background: var(--green-800); color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+.chat-send:hover { background: var(--green-600); }
+.chat-send:active { transform: scale(0.95); }
+.chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Page views */
+.view-content { display: none; animation: fadeIn 0.3s var(--ease-out); }
+.view-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.page-header { margin-bottom: 18px; }
+.page-title { font-size: 18px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px; }
+.page-desc { font-size: 12px; color: var(--color-text-secondary); }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th, .data-table td { padding: 10px 12px; text-align: left; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.data-table th { font-weight: 600; color: var(--color-text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; background: var(--color-background-secondary); }
+.data-table tr:hover td { background: var(--green-50); }
+
+.info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.info-box {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 10px; padding: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.info-box-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.info-box-val { font-size: 20px; font-weight: 600; color: var(--color-text-primary); }
+
+.twin-map {
+  background: linear-gradient(135deg, var(--green-50), var(--teal-50));
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 12px; height: 220px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px; position: relative; overflow: hidden;
+}
+.twin-map::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(59,109,17,0.06) 28px, rgba(59,109,17,0.06) 29px),
+              repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(59,109,17,0.06) 28px, rgba(59,109,17,0.06) 29px);
+}
+.twin-zone {
+  position: absolute; border-radius: 8px; padding: 6px 10px;
+  font-size: 10px; font-weight: 600; cursor: pointer;
+  border: 1.5px solid; transition: transform 0.2s;
+}
+.twin-zone:hover { transform: scale(1.05); z-index: 2; }
+.tz-a { top: 30px; left: 40px; background: rgba(234,243,222,0.9); border-color: var(--green-600); color: var(--green-800); }
+.tz-b { top: 80px; right: 60px; background: rgba(230,241,251,0.9); border-color: var(--blue-600); color: var(--blue-800); }
+.tz-c { bottom: 40px; left: 100px; background: rgba(250,238,218,0.9); border-color: var(--amber-600); color: var(--amber-800); }
+
+.settings-group { margin-bottom: 18px; }
+.settings-label { font-size: 12px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 10px; }
+.setting-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary);
+  font-size: 13px; color: var(--color-text-secondary);
+}
+.toggle {
+  width: 40px; height: 22px; border-radius: 11px;
+  background: var(--green-600); position: relative; cursor: pointer;
+}
+.toggle::after {
+  content: ''; position: absolute; top: 3px; right: 3px;
+  width: 16px; height: 16px; border-radius: 50%; background: #fff;
+  transition: transform 0.2s;
+}
+.toggle.off { background: var(--color-border-secondary); }
+.toggle.off::after { transform: translateX(-18px); }
+
+.list-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px; border-radius: 8px; cursor: pointer;
+  border: 0.5px solid transparent; transition: all 0.2s;
+  font-size: 12px; color: var(--color-text-secondary);
+}
+.list-item:hover { background: var(--green-50); border-color: var(--color-border-tertiary); }
+
+.cica-row { cursor: pointer; padding: 6px 8px; margin: -6px -8px; border-radius: 8px; transition: background 0.2s; }
+.cica-row:hover { background: var(--color-background-secondary); }
+
+.badge-cica, .avatar { cursor: pointer; transition: opacity 0.2s, transform 0.2s; }
+.badge-cica:hover, .avatar:hover { opacity: 0.9; transform: scale(1.05); }
+
+/* Detail modal */
+.detail-overlay {
+  position: fixed; inset: 0;
+  background: rgba(23, 52, 4, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.25s, visibility 0.25s;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.detail-overlay.open { opacity: 1; visibility: visible; }
+.detail-modal {
+  background: var(--color-background-primary);
+  border-radius: 14px;
+  width: 100%; max-width: 440px;
+  box-shadow: var(--shadow-lg);
+  transform: scale(0.95); opacity: 0;
+  transition: transform 0.3s var(--ease-out), opacity 0.3s;
+  overflow: hidden;
+}
+.detail-overlay.open .detail-modal { transform: scale(1); opacity: 1; }
+.detail-header {
+  padding: 16px 18px;
+  background: linear-gradient(90deg, var(--green-900), var(--green-800));
+  color: #fff;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.detail-title { font-size: 15px; font-weight: 600; }
+.detail-subtitle { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+.detail-body { padding: 18px; max-height: 60vh; overflow-y: auto; }
+.detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary);
+  font-size: 13px;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-row-label { color: var(--color-text-secondary); }
+.detail-row-val { font-weight: 600; color: var(--color-text-primary); }
+.detail-text { font-size: 13px; line-height: 1.6; color: var(--color-text-primary); margin-bottom: 12px; }
+.detail-footer { padding: 12px 18px; border-top: 0.5px solid var(--color-border-tertiary); text-align: right; }
+.detail-btn {
+  padding: 8px 16px; border: none; border-radius: 8px;
+  background: var(--green-800); color: #fff;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-sans);
+}
+.detail-btn:hover { background: var(--green-600); }
+
 @media (max-width: 900px) {
   body { padding: 0; }
   .app { border-radius: 0; max-width: none; min-height: 100vh; }
@@ -378,6 +659,7 @@ body {
   .agents-row { grid-template-columns: repeat(3, 1fr); }
   .weather-row { flex-wrap: wrap; }
   .weather-item { min-width: calc(33% - 8px); }
+  .chat-panel { right: 0; bottom: 0; width: 100%; max-width: 100%; height: 70vh; border-radius: 16px 16px 0 0; }
 }
 </style>
 
@@ -391,51 +673,54 @@ body {
       </div>
     </div>
     <div class="topbar-right">
-      <span class="badge-cica">CICA Member Network</span>
-      <div class="avatar">RA</div>
+      <span class="badge-cica" onclick="showDetail('cica-network')">CICA Member Network</span>
+      <div class="avatar" onclick="showDetail('profile')">RA</div>
     </div>
   </div>
 
   <div class="sidebar" role="navigation" aria-label="Main navigation">
     <div class="nav-section">Overview</div>
-    <div class="nav-item active"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard</div>
-    <div class="nav-item"><i class="ti ti-3d-cube-sphere" aria-hidden="true"></i> Digital Farm Twin</div>
+    <div class="nav-item active" data-view="dashboard" onclick="showView('dashboard')"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard</div>
+    <div class="nav-item" data-view="farm-twin" onclick="showView('farm-twin')"><i class="ti ti-3d-cube-sphere" aria-hidden="true"></i> Digital Farm Twin</div>
 
     <div class="nav-section">AI Agents</div>
-    <div class="nav-item"><i class="ti ti-plant" aria-hidden="true"></i> Crop Health <span class="nav-dot dot-green"></span></div>
-    <div class="nav-item"><i class="ti ti-droplet" aria-hidden="true"></i> Water Mgmt <span class="nav-dot dot-amber"></span></div>
-    <div class="nav-item"><i class="ti ti-cloud-storm" aria-hidden="true"></i> Climate Risk <span class="nav-dot dot-green"></span></div>
-    <div class="nav-item"><i class="ti ti-trending-up" aria-hidden="true"></i> Yield Hub</div>
-    <div class="nav-item"><i class="ti ti-building-store" aria-hidden="true"></i> Market Intel</div>
+    <div class="nav-item" onclick="openAgent('crop-health')"><i class="ti ti-plant" aria-hidden="true"></i> Crop Health <span class="nav-dot dot-green"></span></div>
+    <div class="nav-item" onclick="openAgent('water-mgmt')"><i class="ti ti-droplet" aria-hidden="true"></i> Water Mgmt <span class="nav-dot dot-amber"></span></div>
+    <div class="nav-item" onclick="openAgent('climate')"><i class="ti ti-cloud-storm" aria-hidden="true"></i> Climate Risk <span class="nav-dot dot-green"></span></div>
+    <div class="nav-item" data-view="yield-hub" onclick="showView('yield-hub')"><i class="ti ti-trending-up" aria-hidden="true"></i> Yield Hub</div>
+    <div class="nav-item" onclick="openAgent('market-intel')"><i class="ti ti-building-store" aria-hidden="true"></i> Market Intel</div>
 
     <div class="nav-section">Reports</div>
-    <div class="nav-item"><i class="ti ti-file-analytics" aria-hidden="true"></i> Analytics</div>
-    <div class="nav-item"><i class="ti ti-world" aria-hidden="true"></i> CICA Portal <span class="nav-dot dot-green"></span></div>
+    <div class="nav-item" data-view="analytics" onclick="showView('analytics')"><i class="ti ti-file-analytics" aria-hidden="true"></i> Analytics</div>
+    <div class="nav-item" data-view="cica-portal" onclick="showView('cica-portal')"><i class="ti ti-world" aria-hidden="true"></i> CICA Portal <span class="nav-dot dot-green"></span></div>
 
     <div class="nav-section">System</div>
-    <div class="nav-item"><i class="ti ti-settings" aria-hidden="true"></i> Settings</div>
+    <div class="nav-item" data-view="settings" onclick="showView('settings')"><i class="ti ti-settings" aria-hidden="true"></i> Settings</div>
   </div>
 
   <div class="main" role="main">
     <h2 class="sr-only">AgriGuard AI farm management dashboard</h2>
 
+    <!-- Dashboard view -->
+    <div id="view-dashboard" class="view-content active">
+
     <div class="metrics-row">
-      <div class="metric-card">
+      <div class="metric-card" onclick="showDetail('metric-yield')">
         <div class="metric-label">Crop yield forecast</div>
         <div class="metric-val val-green">+24%</div>
         <div class="metric-sub sub-up">↑ vs last season</div>
       </div>
-      <div class="metric-card">
+      <div class="metric-card" onclick="showDetail('metric-water')">
         <div class="metric-label">Water efficiency</div>
         <div class="metric-val val-blue">67%</div>
         <div class="metric-sub sub-up">↑ +12pp this month</div>
       </div>
-      <div class="metric-card">
+      <div class="metric-card" onclick="showDetail('metric-disease')">
         <div class="metric-label">Disease risk score</div>
         <div class="metric-val val-amber">Low</div>
         <div class="metric-sub" style="color:var(--color-text-tertiary)">3 zones monitored</div>
       </div>
-      <div class="metric-card">
+      <div class="metric-card" onclick="showDetail('metric-regions')">
         <div class="metric-label">Active farm regions</div>
         <div class="metric-val val-teal">12</div>
         <div class="metric-sub" style="color:var(--color-text-tertiary)">4 CICA countries</div>
@@ -444,27 +729,27 @@ body {
 
     <div class="section-title"><i class="ti ti-robot" aria-hidden="true"></i> Virtual AI Farming Agents</div>
     <div class="agents-row">
-      <div class="agent-card" onclick="sendPrompt('Tell me more about the Crop Health Agent in AgriGuard AI')">
+      <div class="agent-card" data-agent="crop-health" onclick="openAgent('crop-health')">
         <div class="agent-icon-wrap ai-green"><i class="ti ti-plant-2" aria-hidden="true"></i></div>
         <div class="agent-name">Crop Health</div>
         <div class="agent-status"><span class="status-dot sd-active"></span>Active</div>
       </div>
-      <div class="agent-card" onclick="sendPrompt('Tell me more about the Water Management Agent')">
+      <div class="agent-card" data-agent="water-mgmt" onclick="openAgent('water-mgmt')">
         <div class="agent-icon-wrap ai-blue"><i class="ti ti-droplet-half-2" aria-hidden="true"></i></div>
         <div class="agent-name">Water Mgmt</div>
         <div class="agent-status"><span class="status-dot sd-active"></span>Active</div>
       </div>
-      <div class="agent-card" onclick="sendPrompt('Tell me more about the Climate Agent')">
+      <div class="agent-card" data-agent="climate" onclick="openAgent('climate')">
         <div class="agent-icon-wrap ai-amber"><i class="ti ti-cloud-rain" aria-hidden="true"></i></div>
         <div class="agent-name">Climate</div>
         <div class="agent-status"><span class="status-dot sd-active"></span>Active</div>
       </div>
-      <div class="agent-card" onclick="sendPrompt('Tell me more about the Market Intelligence Agent')">
+      <div class="agent-card" data-agent="market-intel" onclick="openAgent('market-intel')">
         <div class="agent-icon-wrap ai-teal"><i class="ti ti-chart-line" aria-hidden="true"></i></div>
         <div class="agent-name">Market Intel</div>
         <div class="agent-status"><span class="status-dot sd-idle"></span>Standby</div>
       </div>
-      <div class="agent-card" onclick="sendPrompt('Tell me more about the Sustainability Agent')">
+      <div class="agent-card" data-agent="sustainability" onclick="openAgent('sustainability')">
         <div class="agent-icon-wrap ai-coral"><i class="ti ti-recycle" aria-hidden="true"></i></div>
         <div class="agent-name">Sustainability</div>
         <div class="agent-status"><span class="status-dot sd-active"></span>Active</div>
@@ -478,22 +763,22 @@ body {
           <span class="pill pill-green">All regions</span>
         </div>
         <div class="crop-list">
-          <div class="crop-row">
+          <div class="crop-row" onclick="showDetail('crop-wheat')">
             <span class="crop-name">Wheat</span>
             <div class="progress-bg"><div class="progress-fill p-green" style="width:82%"></div></div>
             <span class="crop-pct">82%</span>
           </div>
-          <div class="crop-row">
+          <div class="crop-row" onclick="showDetail('crop-rice')">
             <span class="crop-name">Rice</span>
             <div class="progress-bg"><div class="progress-fill p-teal" style="width:76%"></div></div>
             <span class="crop-pct">76%</span>
           </div>
-          <div class="crop-row">
+          <div class="crop-row" onclick="showDetail('crop-maize')">
             <span class="crop-name">Maize</span>
             <div class="progress-bg"><div class="progress-fill p-blue" style="width:91%"></div></div>
             <span class="crop-pct">91%</span>
           </div>
-          <div class="crop-row">
+          <div class="crop-row" onclick="showDetail('crop-cotton')">
             <span class="crop-name">Cotton</span>
             <div class="progress-bg"><div class="progress-fill p-amber" style="width:58%"></div></div>
             <span class="crop-pct">58%</span>
@@ -507,21 +792,21 @@ body {
           <span class="pill pill-amber">2 warnings</span>
         </div>
         <div class="alert-list">
-          <div class="alert-item alert-warn">
+          <div class="alert-item alert-warn" onclick="showDetail('alert-drought')">
             <i class="ti ti-alert-triangle alert-icon icon-warn" aria-hidden="true"></i>
             <div>
               <div class="alert-text">Drought risk elevated — Punjab zone C</div>
               <div class="alert-meta">Climate Agent · 2h ago</div>
             </div>
           </div>
-          <div class="alert-item alert-danger">
+          <div class="alert-item alert-danger" onclick="showDetail('alert-aphid')">
             <i class="ti ti-bug alert-icon icon-danger" aria-hidden="true"></i>
             <div>
               <div class="alert-text">Aphid outbreak predicted — cotton fields</div>
               <div class="alert-meta">Crop Health Agent · 4h ago</div>
             </div>
           </div>
-          <div class="alert-item alert-info">
+          <div class="alert-item alert-info" onclick="showDetail('alert-irrigation')">
             <i class="ti ti-droplet alert-icon icon-info" aria-hidden="true"></i>
             <div>
               <div class="alert-text">Irrigation schedule optimised — 18% water saved</div>
@@ -538,13 +823,13 @@ body {
         <span class="pill pill-blue">Region: Punjab, PK</span>
       </div>
       <div class="weather-row">
-        <div class="weather-item"><div class="weather-day">Mon</div><div class="weather-icon">☀️</div><div class="weather-temp">38°C</div><div class="weather-cond">Clear</div></div>
-        <div class="weather-item"><div class="weather-day">Tue</div><div class="weather-icon">🌤</div><div class="weather-temp">36°C</div><div class="weather-cond">Partly cloudy</div></div>
-        <div class="weather-item"><div class="weather-day">Wed</div><div class="weather-icon">⛅</div><div class="weather-temp">33°C</div><div class="weather-cond">Overcast</div></div>
-        <div class="weather-item"><div class="weather-day">Thu</div><div class="weather-icon">🌧</div><div class="weather-temp">28°C</div><div class="weather-cond">Rain likely</div></div>
-        <div class="weather-item"><div class="weather-day">Fri</div><div class="weather-icon">⛈</div><div class="weather-temp">26°C</div><div class="weather-cond">Thunderstorm</div></div>
-        <div class="weather-item"><div class="weather-day">Sat</div><div class="weather-icon">🌦</div><div class="weather-temp">30°C</div><div class="weather-cond">Showers</div></div>
-        <div class="weather-item"><div class="weather-day">Sun</div><div class="weather-icon">☀️</div><div class="weather-temp">35°C</div><div class="weather-cond">Clear</div></div>
+        <div class="weather-item" onclick="showDetail('weather-mon')"><div class="weather-day">Mon</div><div class="weather-icon">☀️</div><div class="weather-temp">38°C</div><div class="weather-cond">Clear</div></div>
+        <div class="weather-item" onclick="showDetail('weather-tue')"><div class="weather-day">Tue</div><div class="weather-icon">🌤</div><div class="weather-temp">36°C</div><div class="weather-cond">Partly cloudy</div></div>
+        <div class="weather-item" onclick="showDetail('weather-wed')"><div class="weather-day">Wed</div><div class="weather-icon">⛅</div><div class="weather-temp">33°C</div><div class="weather-cond">Overcast</div></div>
+        <div class="weather-item" onclick="showDetail('weather-thu')"><div class="weather-day">Thu</div><div class="weather-icon">🌧</div><div class="weather-temp">28°C</div><div class="weather-cond">Rain likely</div></div>
+        <div class="weather-item" onclick="showDetail('weather-fri')"><div class="weather-day">Fri</div><div class="weather-icon">⛈</div><div class="weather-temp">26°C</div><div class="weather-cond">Thunderstorm</div></div>
+        <div class="weather-item" onclick="showDetail('weather-sat')"><div class="weather-day">Sat</div><div class="weather-icon">🌦</div><div class="weather-temp">30°C</div><div class="weather-cond">Showers</div></div>
+        <div class="weather-item" onclick="showDetail('weather-sun')"><div class="weather-day">Sun</div><div class="weather-icon">☀️</div><div class="weather-temp">35°C</div><div class="weather-cond">Clear</div></div>
       </div>
     </div>
 
@@ -555,13 +840,13 @@ body {
           <span class="pill pill-teal">tonnes/ha</span>
         </div>
         <div class="mini-chart" aria-label="Monthly yield bar chart">
-          <div class="bar bbl" style="height:30px" title="Jan"></div>
-          <div class="bar bbl" style="height:35px" title="Feb"></div>
-          <div class="bar bbg" style="height:28px" title="Mar"></div>
-          <div class="bar bbg" style="height:40px" title="Apr"></div>
-          <div class="bar bba" style="height:32px" title="May"></div>
-          <div class="bar bbg" style="height:45px" title="Jun"></div>
-          <div class="bar bbg" style="height:48px" title="Jul"></div>
+          <div class="bar bbl" style="height:30px" title="Jan" onclick="showDetail('yield-jan')"></div>
+          <div class="bar bbl" style="height:35px" title="Feb" onclick="showDetail('yield-feb')"></div>
+          <div class="bar bbg" style="height:28px" title="Mar" onclick="showDetail('yield-mar')"></div>
+          <div class="bar bbg" style="height:40px" title="Apr" onclick="showDetail('yield-apr')"></div>
+          <div class="bar bba" style="height:32px" title="May" onclick="showDetail('yield-may')"></div>
+          <div class="bar bbg" style="height:45px" title="Jun" onclick="showDetail('yield-jun')"></div>
+          <div class="bar bbg" style="height:48px" title="Jul" onclick="showDetail('yield-jul')"></div>
         </div>
         <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:6px">Jan – Jul 2026</div>
       </div>
@@ -572,27 +857,413 @@ body {
           <span class="pill pill-green">4 active</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:7px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="cica-row" style="display:flex;justify-content:space-between;align-items:center" onclick="showDetail('cica-pakistan')">
             <span style="font-size:12px;color:var(--color-text-secondary)">Pakistan</span>
             <span class="pill pill-green">Synced</span>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="cica-row" style="display:flex;justify-content:space-between;align-items:center" onclick="showDetail('cica-kazakhstan')">
             <span style="font-size:12px;color:var(--color-text-secondary)">Kazakhstan</span>
             <span class="pill pill-green">Synced</span>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="cica-row" style="display:flex;justify-content:space-between;align-items:center" onclick="showDetail('cica-iran')">
             <span style="font-size:12px;color:var(--color-text-secondary)">Iran</span>
             <span class="pill pill-amber">Pending</span>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="cica-row" style="display:flex;justify-content:space-between;align-items:center" onclick="showDetail('cica-china')">
             <span style="font-size:12px;color:var(--color-text-secondary)">China</span>
             <span class="pill pill-blue">In review</span>
           </div>
         </div>
       </div>
     </div>
+
+    </div><!-- end dashboard view -->
+
+    <!-- Digital Farm Twin -->
+    <div id="view-farm-twin" class="view-content">
+      <div class="page-header">
+        <div class="page-title"><i class="ti ti-3d-cube-sphere"></i> Digital Farm Twin</div>
+        <div class="page-desc">Real-time virtual replica of your farm zones — Punjab, Pakistan</div>
+      </div>
+      <div class="twin-map">
+        <div class="twin-zone tz-a" onclick="showDetail('zone-a')">Zone A — Wheat<br>82% health</div>
+        <div class="twin-zone tz-b" onclick="showDetail('zone-b')">Zone B — Rice<br>76% health</div>
+        <div class="twin-zone tz-c" onclick="showDetail('zone-c')">Zone C — Cotton<br>58% health</div>
+      </div>
+      <div class="info-grid">
+        <div class="info-box"><div class="info-box-label">Total area</div><div class="info-box-val">2,450 ha</div></div>
+        <div class="info-box"><div class="info-box-label">Sensors online</div><div class="info-box-val">48 / 50</div></div>
+        <div class="info-box"><div class="info-box-label">Last sync</div><div class="info-box-val">3 min ago</div></div>
+        <div class="info-box"><div class="info-box-label">NDVI avg</div><div class="info-box-val">0.72</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Zone summary</span><span class="pill pill-green">Live</span></div>
+        <table class="data-table">
+          <thead><tr><th>Zone</th><th>Crop</th><th>Health</th><th>Moisture</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr onclick="showDetail('zone-a')" style="cursor:pointer"><td>Zone A</td><td>Wheat</td><td>82%</td><td>34%</td><td><span class="pill pill-green">Healthy</span></td></tr>
+            <tr onclick="showDetail('zone-b')" style="cursor:pointer"><td>Zone B</td><td>Rice</td><td>76%</td><td>61%</td><td><span class="pill pill-green">Healthy</span></td></tr>
+            <tr onclick="showDetail('zone-c')" style="cursor:pointer"><td>Zone C</td><td>Cotton</td><td>58%</td><td>22%</td><td><span class="pill pill-amber">At risk</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Yield Hub -->
+    <div id="view-yield-hub" class="view-content">
+      <div class="page-header">
+        <div class="page-title"><i class="ti ti-trending-up"></i> Yield Hub</div>
+        <div class="page-desc">Projected yields across all monitored regions — 2026 season</div>
+      </div>
+      <div class="info-grid">
+        <div class="info-box"><div class="info-box-label">Season forecast</div><div class="info-box-val val-green">+24%</div></div>
+        <div class="info-box"><div class="info-box-label">Best performer</div><div class="info-box-val">Maize</div></div>
+        <div class="info-box"><div class="info-box-label">Avg yield</div><div class="info-box-val">4.2 t/ha</div></div>
+        <div class="info-box"><div class="info-box-label">At-risk crop</div><div class="info-box-val val-amber">Cotton</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Yield projections by crop</span><span class="pill pill-teal">tonnes/ha</span></div>
+        <table class="data-table">
+          <thead><tr><th>Crop</th><th>Current</th><th>Forecast</th><th>Change</th><th>Region</th></tr></thead>
+          <tbody>
+            <tr onclick="showDetail('crop-wheat')" style="cursor:pointer"><td>Wheat</td><td>3.8</td><td>4.6</td><td class="sub-up">+21%</td><td>Punjab, PK</td></tr>
+            <tr onclick="showDetail('crop-rice')" style="cursor:pointer"><td>Rice</td><td>4.1</td><td>4.5</td><td class="sub-up">+10%</td><td>Sindh, PK</td></tr>
+            <tr onclick="showDetail('crop-maize')" style="cursor:pointer"><td>Maize</td><td>5.2</td><td>6.1</td><td class="sub-up">+17%</td><td>Almaty, KZ</td></tr>
+            <tr onclick="showDetail('crop-cotton')" style="cursor:pointer"><td>Cotton</td><td>2.1</td><td>1.9</td><td class="sub-dn">-9%</td><td>Punjab, PK</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Analytics -->
+    <div id="view-analytics" class="view-content">
+      <div class="page-header">
+        <div class="page-title"><i class="ti ti-file-analytics"></i> Analytics</div>
+        <div class="page-desc">Reports and insights generated by AI agents</div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="list-item" onclick="showDetail('report-weekly')"><span><i class="ti ti-report"></i> Weekly Farm Summary — Jun 23, 2026</span><span class="pill pill-green">Ready</span></div>
+        <div class="list-item" onclick="showDetail('report-water')"><span><i class="ti ti-droplet"></i> Water Efficiency Report — Jun 2026</span><span class="pill pill-blue">Ready</span></div>
+        <div class="list-item" onclick="showDetail('report-climate')"><span><i class="ti ti-cloud"></i> Climate Risk Assessment — Q2 2026</span><span class="pill pill-amber">Review</span></div>
+        <div class="list-item" onclick="showDetail('report-market')"><span><i class="ti ti-chart-bar"></i> CICA Market Outlook — Jul 2026</span><span class="pill pill-teal">Draft</span></div>
+        <div class="list-item" onclick="showDetail('report-sustain')"><span><i class="ti ti-leaf"></i> Sustainability Scorecard — 2026</span><span class="pill pill-green">Ready</span></div>
+      </div>
+      <div class="info-grid">
+        <div class="info-box"><div class="info-box-label">Reports generated</div><div class="info-box-val">24</div></div>
+        <div class="info-box"><div class="info-box-label">Data points</div><div class="info-box-val">1.2M</div></div>
+        <div class="info-box"><div class="info-box-label">AI accuracy</div><div class="info-box-val">94%</div></div>
+      </div>
+    </div>
+
+    <!-- CICA Portal -->
+    <div id="view-cica-portal" class="view-content">
+      <div class="page-header">
+        <div class="page-title"><i class="ti ti-world"></i> CICA Portal</div>
+        <div class="page-desc">Cooperation platform for CICA member state agriculture data sharing</div>
+      </div>
+      <div class="info-grid">
+        <div class="info-box"><div class="info-box-label">Member states</div><div class="info-box-val">4</div></div>
+        <div class="info-box"><div class="info-box-label">Data synced</div><div class="info-box-val">2.4 TB</div></div>
+        <div class="info-box"><div class="info-box-label">Active protocols</div><div class="info-box-val">12</div></div>
+        <div class="info-box"><div class="info-box-label">Last exchange</div><div class="info-box-val">1h ago</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Member cooperation status</span><span class="pill pill-green">4 active</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="list-item" onclick="showDetail('cica-pakistan')"><span>🇵🇰 Pakistan — Punjab & Sindh regions</span><span class="pill pill-green">Synced</span></div>
+          <div class="list-item" onclick="showDetail('cica-kazakhstan')"><span>🇰🇿 Kazakhstan — Almaty & Turkestan</span><span class="pill pill-green">Synced</span></div>
+          <div class="list-item" onclick="showDetail('cica-iran')"><span>🇮🇷 Iran — Khuzestan province</span><span class="pill pill-amber">Pending</span></div>
+          <div class="list-item" onclick="showDetail('cica-china')"><span>🇨🇳 China — Xinjiang region</span><span class="pill pill-blue">In review</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="view-settings" class="view-content">
+      <div class="page-header">
+        <div class="page-title"><i class="ti ti-settings"></i> Settings</div>
+        <div class="page-desc">Platform preferences and notification controls</div>
+      </div>
+      <div class="card">
+        <div class="settings-group">
+          <div class="settings-label">Notifications</div>
+          <div class="setting-row"><span>AI risk alerts</span><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+          <div class="setting-row"><span>Weather warnings</span><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+          <div class="setting-row"><span>Market price updates</span><div class="toggle off" onclick="this.classList.toggle('off')"></div></div>
+          <div class="setting-row"><span>CICA data sync alerts</span><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-label">Display</div>
+          <div class="setting-row"><span>Default region</span><span class="pill pill-blue">Punjab, PK</span></div>
+          <div class="setting-row"><span>Language</span><span class="pill pill-green">English</span></div>
+          <div class="setting-row"><span>Units</span><span class="pill pill-teal">Metric</span></div>
+        </div>
+        <div class="settings-group" style="margin-bottom:0">
+          <div class="settings-label">Account</div>
+          <div class="setting-row" style="cursor:pointer" onclick="showDetail('profile')"><span>Profile — Rashid Ahmed (RA)</span><i class="ti ti-chevron-right"></i></div>
+          <div class="setting-row" style="cursor:pointer" onclick="showDetail('cica-network')"><span>CICA Member Network</span><i class="ti ti-chevron-right"></i></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
+
+<div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-modal" role="dialog">
+    <div class="detail-header">
+      <div>
+        <div class="detail-title" id="detailTitle">Details</div>
+        <div class="detail-subtitle" id="detailSubtitle"></div>
+      </div>
+      <button class="chat-close" onclick="closeDetail()" aria-label="Close"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+    <div class="detail-footer"><button class="detail-btn" onclick="closeDetail()">Close</button></div>
+  </div>
+</div>
+
+<div class="chat-overlay" id="chatOverlay" onclick="closeAgentChat()"></div>
+<div class="chat-panel" id="chatPanel" role="dialog" aria-label="Agent chat">
+  <div class="chat-header">
+    <div class="chat-header-info">
+      <div class="chat-agent-icon" id="chatAgentIcon"><i class="ti ti-robot"></i></div>
+      <div>
+        <div class="chat-agent-name" id="chatAgentName">AI Agent</div>
+        <div class="chat-agent-status" id="chatAgentStatus">Powered by Google Gemini</div>
+      </div>
+    </div>
+    <button class="chat-close" onclick="closeAgentChat()" aria-label="Close chat"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-suggestions" id="chatSuggestions"></div>
+  <div class="chat-input-row">
+    <textarea class="chat-input" id="chatInput" rows="1" placeholder="Ask this agent anything…" onkeydown="handleChatKey(event)"></textarea>
+    <button class="chat-send" id="chatSend" onclick="sendChatMessage()" aria-label="Send message"><i class="ti ti-send"></i></button>
+  </div>
+</div>
+
+<script>
+/* ── View switching ── */
+function showView(viewId) {
+  closeAgentChat();
+  document.querySelectorAll('.view-content').forEach(function (v) { v.classList.remove('active'); });
+  document.querySelectorAll('.nav-item[data-view]').forEach(function (n) { n.classList.remove('active'); });
+  var view = document.getElementById('view-' + viewId);
+  if (view) view.classList.add('active');
+  var nav = document.querySelector('.nav-item[data-view="' + viewId + '"]');
+  if (nav) nav.classList.add('active');
+  document.querySelector('.main').scrollTop = 0;
+}
+
+/* ── Detail modal with dummy data ── */
+const DETAIL_DATA = {
+  'metric-yield': { title: 'Crop Yield Forecast', subtitle: 'Season 2026 projection', rows: [['Forecast','+24%'],['Previous season','+19%'],['Top region','Punjab, PK'],['Primary driver','Optimized irrigation + favorable early rains'],['Confidence','87%']] },
+  'metric-water': { title: 'Water Efficiency', subtitle: 'Irrigation performance', rows: [['Current efficiency','67%'],['Last month','55%'],['Water saved','18%'],['Active systems','12 drip, 4 flood'],['Best zone','Zone B — Rice']] },
+  'metric-disease': { title: 'Disease Risk Score', subtitle: '3 zones monitored', rows: [['Overall risk','Low'],['Zones at risk','1 of 3'],['Active threats','Aphid (cotton)'],['Last scan','4 hours ago'],['Next scan','In 2 hours']] },
+  'metric-regions': { title: 'Active Farm Regions', subtitle: '4 CICA countries', rows: [['Total regions','12'],['Pakistan','4 regions'],['Kazakhstan','3 regions'],['Iran','3 regions'],['China','2 regions']] },
+  'crop-wheat': { title: 'Wheat — Health Index', subtitle: 'Punjab, Pakistan', rows: [['Health score','82%'],['Area','680 ha'],['Growth stage','Heading'],['NDVI','0.78'],['Forecast yield','4.6 t/ha'],['Risk','Low']] },
+  'crop-rice': { title: 'Rice — Health Index', subtitle: 'Sindh, Pakistan', rows: [['Health score','76%'],['Area','420 ha'],['Growth stage','Tillering'],['NDVI','0.71'],['Forecast yield','4.5 t/ha'],['Risk','Low']] },
+  'crop-maize': { title: 'Maize — Health Index', subtitle: 'Almaty, Kazakhstan', rows: [['Health score','91%'],['Area','350 ha'],['Growth stage','Vegetative'],['NDVI','0.85'],['Forecast yield','6.1 t/ha'],['Risk','Very low']] },
+  'crop-cotton': { title: 'Cotton — Health Index', subtitle: 'Punjab, Pakistan', rows: [['Health score','58%'],['Area','510 ha'],['Growth stage','Flowering'],['NDVI','0.52'],['Forecast yield','1.9 t/ha'],['Risk','High — aphid alert']] },
+  'alert-drought': { title: 'Drought Risk Alert', subtitle: 'Climate Agent · 2h ago', text: 'Punjab Zone C is experiencing below-average soil moisture (22%). With no significant rainfall forecast until Thursday, irrigation should be increased by 15% for cotton fields. Consider mulching to reduce evaporation.', rows: [['Severity','Warning'],['Zone','Punjab C'],['Soil moisture','22%'],['Recommended action','Increase irrigation']] },
+  'alert-aphid': { title: 'Aphid Outbreak Predicted', subtitle: 'Crop Health Agent · 4h ago', text: 'AI models predict a 73% probability of aphid infestation in cotton fields within 5–7 days based on humidity and temperature patterns. Preventive neem-based spray recommended for Zone C within 48 hours.', rows: [['Severity','High'],['Affected crop','Cotton'],['Probability','73%'],['Timeframe','5–7 days']] },
+  'alert-irrigation': { title: 'Irrigation Optimized', subtitle: 'Water Agent · 6h ago', text: 'The AI irrigation scheduler adjusted watering times across 12 zones, shifting peak irrigation to early morning (5–7 AM) to reduce evaporation losses. Estimated savings: 18% water this week.', rows: [['Water saved','18%'],['Zones updated','12'],['Schedule','5:00–7:00 AM'],['Method','Drip + flood hybrid']] },
+  'weather-mon': { title: 'Monday Forecast', subtitle: 'Punjab, PK', rows: [['Condition','Clear'],['High / Low','38°C / 26°C'],['Humidity','32%'],['Wind','12 km/h NW'],['UV Index','9 (Very high)'],['Farm impact','Ideal for field work']] },
+  'weather-tue': { title: 'Tuesday Forecast', subtitle: 'Punjab, PK', rows: [['Condition','Partly cloudy'],['High / Low','36°C / 25°C'],['Humidity','38%'],['Wind','10 km/h W'],['UV Index','8'],['Farm impact','Good for spraying operations']] },
+  'weather-wed': { title: 'Wednesday Forecast', subtitle: 'Punjab, PK', rows: [['Condition','Overcast'],['High / Low','33°C / 24°C'],['Humidity','52%'],['Wind','8 km/h SW'],['Rain chance','15%'],['Farm impact','Reduce irrigation']] },
+  'weather-thu': { title: 'Thursday Forecast', subtitle: 'Punjab, PK', rows: [['Condition','Rain likely'],['High / Low','28°C / 22°C'],['Humidity','78%'],['Rainfall','15–25 mm'],['Wind','18 km/h SE'],['Farm impact','Delay fertilizer application']] },
+  'weather-fri': { title: 'Friday Forecast', subtitle: 'Punjab, PK', rows: [['Condition','Thunderstorm'],['High / Low','26°C / 21°C'],['Humidity','85%'],['Rainfall','30–45 mm'],['Wind','25 km/h E'],['Farm impact','Secure equipment, avoid field work']] },
+  'weather-sat': { title: 'Saturday Forecast', subtitle: 'Punjab, PK', rows: [['Condition','Showers'],['High / Low','30°C / 23°C'],['Humidity','65%'],['Rainfall','5–10 mm'],['Wind','14 km/h S'],['Farm impact','Good soil moisture recharge']] },
+  'weather-sun': { title: 'Sunday Forecast', subtitle: 'Punjab, PK', rows: [['Condition','Clear'],['High / Low','35°C / 25°C'],['Humidity','40%'],['Wind','11 km/h NW'],['UV Index','8'],['Farm impact','Resume normal operations']] },
+  'yield-jan': { title: 'January Yield', subtitle: '2026', rows: [['Yield','3.2 t/ha'],['Crop','Wheat (winter)'],['vs Target','-8%'],['Notes','Late planting in Zone C']] },
+  'yield-feb': { title: 'February Yield', subtitle: '2026', rows: [['Yield','3.5 t/ha'],['Crop','Wheat'],['vs Target','-2%'],['Notes','Improved after irrigation upgrade']] },
+  'yield-mar': { title: 'March Yield', subtitle: '2026', rows: [['Yield','3.1 t/ha'],['Crop','Mixed'],['vs Target','-5%'],['Notes','Transitional month']] },
+  'yield-apr': { title: 'April Yield', subtitle: '2026', rows: [['Yield','4.0 t/ha'],['Crop','Wheat harvest'],['vs Target','+5%'],['Notes','Strong harvest in Zone A']] },
+  'yield-may': { title: 'May Yield', subtitle: '2026', rows: [['Yield','3.6 t/ha'],['Crop','Rice planting'],['vs Target','On target'],['Notes','Monsoon prep underway']] },
+  'yield-jun': { title: 'June Yield', subtitle: '2026', rows: [['Yield','4.5 t/ha'],['Crop','Rice + Maize'],['vs Target','+12%'],['Notes','Best month so far']] },
+  'yield-jul': { title: 'July Yield', subtitle: '2026', rows: [['Yield','4.8 t/ha'],['Crop','Maize'],['vs Target','+18%'],['Notes','Peak growing season']] },
+  'cica-pakistan': { title: 'Pakistan', subtitle: 'CICA Member — Synced', text: 'Agricultural data sharing active for Punjab and Sindh regions. 4 farm zones connected with real-time sensor feeds.', rows: [['Status','Synced'],['Regions','4'],['Data shared','840 GB'],['Last sync','12 min ago'],['Crops','Wheat, Rice, Cotton']] },
+  'cica-kazakhstan': { title: 'Kazakhstan', subtitle: 'CICA Member — Synced', text: 'Almaty and Turkestan regions connected. Strong cooperation on wheat and maize yield data exchange.', rows: [['Status','Synced'],['Regions','3'],['Data shared','620 GB'],['Last sync','28 min ago'],['Crops','Wheat, Maize']] },
+  'cica-iran': { title: 'Iran', subtitle: 'CICA Member — Pending', text: 'Khuzestan province integration is pending final protocol approval. Data pipeline configured but awaiting government clearance.', rows: [['Status','Pending'],['Regions','3'],['Data queued','410 GB'],['Expected sync','Jul 2026'],['Crops','Wheat, Rice']] },
+  'cica-china': { title: 'China', subtitle: 'CICA Member — In review', text: 'Xinjiang region agricultural data under bilateral review. Preliminary sensor data received for 2 pilot zones.', rows: [['Status','In review'],['Regions','2'],['Data received','180 GB'],['Review deadline','Aug 2026'],['Crops','Cotton, Wheat']] },
+  'cica-network': { title: 'CICA Member Network', subtitle: 'Conference on Interaction and Confidence Building in Asia', text: 'AgriGuard AI is connected to the CICA agricultural cooperation network, enabling cross-border data sharing, joint climate monitoring, and coordinated market intelligence across member states.', rows: [['Members connected','4'],['Total data synced','2.4 TB'],['Active protocols','12'],['Platform version','AgriGuard v2.1']] },
+  'profile': { title: 'Rashid Ahmed', subtitle: 'Farm Operations Manager', text: 'Managing 12 farm regions across the CICA network. Primary focus: Punjab agricultural zones with specialization in wheat and cotton production.', rows: [['Role','Operations Manager'],['Organization','AgriGuard AI'],['Regions','12'],['Member since','Jan 2025'],['Language','English, Urdu']] },
+  'zone-a': { title: 'Zone A — Wheat', subtitle: 'Digital Farm Twin', rows: [['Crop','Wheat'],['Health','82%'],['Area','820 ha'],['Soil moisture','34%'],['NDVI','0.78'],['Sensors','16 online'],['Status','Healthy']] },
+  'zone-b': { title: 'Zone B — Rice', subtitle: 'Digital Farm Twin', rows: [['Crop','Rice'],['Health','76%'],['Area','540 ha'],['Soil moisture','61%'],['NDVI','0.71'],['Sensors','14 online'],['Status','Healthy']] },
+  'zone-c': { title: 'Zone C — Cotton', subtitle: 'Digital Farm Twin', rows: [['Crop','Cotton'],['Health','58%'],['Area','510 ha'],['Soil moisture','22%'],['NDVI','0.52'],['Sensors','12 online'],['Status','At risk — drought + aphid']] },
+  'report-weekly': { title: 'Weekly Farm Summary', subtitle: 'Jun 23, 2026', text: 'Overall farm health is good at 77% average. Wheat and maize performing above target. Cotton in Zone C requires attention due to drought stress and predicted aphid outbreak. Water efficiency improved 12pp this month.', rows: [['Generated by','All agents'],['Pages','12'],['Key finding','Cotton at risk'],['Action items','3']] },
+  'report-water': { title: 'Water Efficiency Report', subtitle: 'June 2026', text: 'Platform-wide water efficiency reached 67%, up from 55% last month. Drip irrigation systems in Zones A and B contributed most to savings. Zone C requires additional water allocation.', rows: [['Efficiency','67%'],['Saved','18%'],['Systems','16 active'],['Recommendation','Upgrade Zone C to drip']] },
+  'report-climate': { title: 'Climate Risk Assessment', subtitle: 'Q2 2026', text: 'Q2 showed above-average temperatures in Punjab (+2.3°C). Thunderstorm risk elevated for late June. Drought conditions developing in Zone C. Recommend harvest acceleration for early-maturing wheat varieties.', rows: [['Risk level','Moderate'],['Hot days','18'],['Storm days (forecast)','3'],['Drought zones','1']] },
+  'report-market': { title: 'CICA Market Outlook', subtitle: 'July 2026', text: 'Wheat prices stable with slight upward trend (+3%). Cotton prices under pressure due to global supply. Maize demand strong in Central Asian markets. Best export window for wheat: August–September.', rows: [['Wheat trend','↑ 3%'],['Cotton trend','↓ 5%'],['Maize trend','↑ 8%'],['Best export','Wheat, Aug–Sep']] },
+  'report-sustain': { title: 'Sustainability Scorecard', subtitle: '2026', text: 'Farm sustainability score: 72/100. Water conservation efforts and reduced chemical usage in Zone A improved the score by 8 points. Target: 80/100 by end of year through organic transition in Zone B.', rows: [['Score','72/100'],['Water score','85/100'],['Carbon score','68/100'],['Biodiversity','65/100'],['Target','80/100']] },
+};
+
+function showDetail(id) {
+  var data = DETAIL_DATA[id];
+  if (!data) return;
+  document.getElementById('detailTitle').textContent = data.title;
+  document.getElementById('detailSubtitle').textContent = data.subtitle || '';
+  var body = '';
+  if (data.text) body += '<div class="detail-text">' + data.text + '</div>';
+  if (data.rows) {
+    body += data.rows.map(function (r) {
+      return '<div class="detail-row"><span class="detail-row-label">' + r[0] + '</span><span class="detail-row-val">' + r[1] + '</span></div>';
+    }).join('');
+  }
+  document.getElementById('detailBody').innerHTML = body;
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('open');
+}
+
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') { closeDetail(); closeAgentChat(); }
+});
+
+const AGENT_CONFIG = {
+  'crop-health': {
+    name: 'Crop Health Agent',
+    icon: 'ti-plant-2',
+    colorClass: 'ai-green',
+    greeting: 'Hello! I monitor crop health across your fields. Ask me about diseases, pests, nutrition, or your crop health index.',
+    suggestions: ['How healthy is my cotton crop?', 'What should I do about the aphid alert?', 'Tips to improve wheat yield'],
+  },
+  'water-mgmt': {
+    name: 'Water Management Agent',
+    icon: 'ti-droplet-half-2',
+    colorClass: 'ai-blue',
+    greeting: 'Hello! I optimize irrigation and water efficiency. Ask me about scheduling, conservation, or drought preparedness.',
+    suggestions: ['How can I save more water?', 'Best irrigation for rice fields', 'Advice for Punjab zone C drought risk'],
+  },
+  climate: {
+    name: 'Climate Risk Agent',
+    icon: 'ti-cloud-rain',
+    colorClass: 'ai-amber',
+    greeting: 'Hello! I track weather and climate risks for your farm. Ask me about forecasts, seasonal planning, or risk mitigation.',
+    suggestions: ['Should I harvest before the storm?', 'Impact of this week\'s rain on wheat', 'Drought preparedness steps'],
+  },
+  'market-intel': {
+    name: 'Market Intelligence Agent',
+    icon: 'ti-chart-line',
+    colorClass: 'ai-teal',
+    greeting: 'Hello! I analyze agricultural markets and trade. Ask me about commodity prices, export timing, or CICA market trends.',
+    suggestions: ['Best time to sell cotton?', 'Wheat price outlook in Pakistan', 'CICA export opportunities'],
+  },
+  sustainability: {
+    name: 'Sustainability Agent',
+    icon: 'ti-recycle',
+    colorClass: 'ai-coral',
+    greeting: 'Hello! I guide sustainable farming practices. Ask me about eco-friendly methods, soil conservation, or carbon reduction.',
+    suggestions: ['Sustainable cotton farming tips', 'Reduce farm carbon footprint', 'Organic transition plan'],
+  },
+};
+
+let currentAgent = null;
+let isLoading = false;
+
+function openAgent(agentId, initialMessage) {
+  const config = AGENT_CONFIG[agentId];
+  if (!config) return;
+
+  currentAgent = agentId;
+  document.getElementById('chatAgentName').textContent = config.name;
+  document.getElementById('chatAgentStatus').textContent = 'Powered by Google Gemini';
+  document.getElementById('chatAgentIcon').className = 'chat-agent-icon ' + config.colorClass;
+  document.getElementById('chatAgentIcon').innerHTML = '<i class="ti ' + config.icon + '"></i>';
+
+  const messages = document.getElementById('chatMessages');
+  messages.innerHTML = '';
+  appendMessage('agent', config.greeting);
+
+  const suggestionsEl = document.getElementById('chatSuggestions');
+  suggestionsEl.innerHTML = config.suggestions
+    .map(function (s) { return '<button class="chat-suggestion" onclick="askSuggestion(\'' + s.replace(/'/g, "\\'") + '\')">' + s + '</button>'; })
+    .join('');
+
+  document.getElementById('chatInput').value = '';
+  document.getElementById('chatOverlay').classList.add('open');
+  document.getElementById('chatPanel').classList.add('open');
+  document.getElementById('chatInput').focus();
+
+  if (initialMessage) {
+    sendChatMessage(initialMessage);
+  }
+}
+
+function closeAgentChat() {
+  document.getElementById('chatOverlay').classList.remove('open');
+  document.getElementById('chatPanel').classList.remove('open');
+  currentAgent = null;
+}
+
+function askSuggestion(text) {
+  document.getElementById('chatInput').value = text;
+  sendChatMessage();
+}
+
+function appendMessage(role, text) {
+  const el = document.createElement('div');
+  el.className = 'chat-msg ' + role;
+  el.textContent = text;
+  const container = document.getElementById('chatMessages');
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+  return el;
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatMessage();
+  }
+}
+
+async function sendChatMessage(overrideText) {
+  if (isLoading || !currentAgent) return;
+
+  const input = document.getElementById('chatInput');
+  const message = (overrideText || input.value).trim();
+  if (!message) return;
+
+  input.value = '';
+  appendMessage('user', message);
+
+  isLoading = true;
+  document.getElementById('chatSend').disabled = true;
+  const loadingEl = appendMessage('loading', 'Thinking');
+
+  try {
+    const res = await fetch('/api/agent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agentId: currentAgent, message: message }),
+    });
+
+    const data = await res.json();
+    loadingEl.remove();
+
+    if (!res.ok) {
+      appendMessage('error', data.error || 'Something went wrong. Please try again.');
+    } else {
+      appendMessage('agent', data.reply);
+    }
+  } catch (err) {
+    loadingEl.remove();
+    appendMessage('error', 'Could not reach the agent. Make sure the API is deployed on Vercel with Gemini keys configured.');
+  }
+
+  isLoading = false;
+  document.getElementById('chatSend').disabled = false;
+  document.getElementById('chatInput').focus();
+}
+
+function sendPrompt(text) {
+  openAgent('crop-health', text);
+}
+</script>
 
 </body>
 </html>
