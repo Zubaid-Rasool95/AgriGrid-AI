@@ -1,0 +1,365 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green-50: #EAF3DE; --green-100: #C0DD97; --green-200: #97C459;
+  --green-600: #3B6D11; --green-800: #27500A; --green-900: #173404;
+  --teal-50: #E1F5EE; --teal-100: #9FE1CB; --teal-400: #1D9E75;
+  --teal-600: #0F6E56; --teal-800: #085041;
+  --amber-50: #FAEEDA; --amber-200: #EF9F27; --amber-400: #BA7517;
+  --amber-600: #854F0B; --amber-800: #633806;
+  --blue-50: #E6F1FB; --blue-200: #85B7EB; --blue-400: #378ADD;
+  --blue-600: #185FA5; --blue-800: #0C447C;
+  --coral-50: #FAECE7; --coral-200: #F0997B; --coral-600: #993C1D; --coral-800: #712B13;
+}
+body { font-family: var(--font-sans, sans-serif); background: transparent; }
+
+.app { display: grid; grid-template-columns: 200px 1fr; grid-template-rows: 52px 1fr; height: 600px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg, 12px); overflow: hidden; background: var(--color-background-primary); }
+
+.topbar {
+  grid-column: 1 / -1;
+  background: var(--green-800);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+}
+.logo { display: flex; align-items: center; gap: 8px; }
+.logo-icon { width: 28px; height: 28px; background: var(--green-100); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.logo-icon i { font-size: 16px; color: var(--green-800); }
+.logo-text { color: #fff; font-size: 15px; font-weight: 500; }
+.logo-sub { color: var(--green-100); font-size: 11px; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.badge-cica { background: var(--green-600); color: var(--green-100); font-size: 11px; padding: 3px 8px; border-radius: 4px; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--green-100); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: var(--green-800); }
+
+.sidebar {
+  background: var(--color-background-secondary);
+  border-right: 0.5px solid var(--color-border-tertiary);
+  padding: 12px 0;
+  overflow-y: auto;
+}
+.nav-section { padding: 4px 12px 2px; font-size: 10px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 8px; }
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 14px; cursor: pointer; font-size: 13px;
+  color: var(--color-text-secondary); border-radius: 0;
+  transition: background 0.15s;
+}
+.nav-item:hover { background: var(--color-border-tertiary); color: var(--color-text-primary); }
+.nav-item.active { background: var(--green-50); color: var(--green-800); font-weight: 500; border-right: 2px solid var(--green-600); }
+.nav-item i { font-size: 15px; }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; margin-left: auto; }
+.dot-green { background: var(--green-200); }
+.dot-amber { background: var(--amber-200); }
+.dot-red { background: #E24B4A; }
+
+.main { overflow-y: auto; padding: 20px; background: var(--color-background-tertiary); }
+
+.section-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.section-title i { font-size: 14px; color: var(--color-text-secondary); }
+
+.metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.metric-card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md, 8px);
+  padding: 12px 14px;
+}
+.metric-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+.metric-val { font-size: 22px; font-weight: 500; line-height: 1; }
+.metric-sub { font-size: 11px; margin-top: 3px; }
+.val-green { color: var(--green-600); }
+.val-amber { color: var(--amber-600); }
+.val-blue { color: var(--blue-600); }
+.val-teal { color: var(--teal-600); }
+.sub-up { color: var(--teal-400); }
+.sub-dn { color: #A32D2D; }
+
+.cards-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg, 12px);
+  padding: 14px 16px;
+}
+.card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.card-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.pill { font-size: 10px; padding: 3px 7px; border-radius: 10px; }
+.pill-green { background: var(--green-50); color: var(--green-800); }
+.pill-amber { background: var(--amber-50); color: var(--amber-800); }
+.pill-teal { background: var(--teal-50); color: var(--teal-800); }
+.pill-blue { background: var(--blue-50); color: var(--blue-800); }
+.pill-red { background: #FCEBEB; color: #791F1F; }
+
+.crop-list { display: flex; flex-direction: column; gap: 8px; }
+.crop-row { display: flex; align-items: center; gap: 8px; }
+.crop-name { font-size: 12px; color: var(--color-text-secondary); width: 60px; flex-shrink: 0; }
+.progress-bg { flex: 1; height: 6px; background: var(--color-background-secondary); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+.p-green { background: var(--green-200); }
+.p-amber { background: var(--amber-200); }
+.p-teal { background: linear-gradient(90deg, var(--teal-400), var(--teal-100)); }
+.p-blue { background: var(--blue-200); }
+.crop-pct { font-size: 11px; color: var(--color-text-secondary); width: 30px; text-align: right; }
+
+.alert-list { display: flex; flex-direction: column; gap: 8px; }
+.alert-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border-radius: 6px; border: 0.5px solid; }
+.alert-warn { background: var(--amber-50); border-color: #EF9F27; }
+.alert-danger { background: #FCEBEB; border-color: #F0A0A0; }
+.alert-info { background: var(--teal-50); border-color: var(--teal-100); }
+.alert-icon { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+.icon-warn { color: var(--amber-600); }
+.icon-danger { color: #A32D2D; }
+.icon-info { color: var(--teal-600); }
+.alert-text { font-size: 12px; color: var(--color-text-primary); line-height: 1.4; }
+.alert-meta { font-size: 10px; color: var(--color-text-tertiary); margin-top: 2px; }
+
+.agents-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
+.agent-card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md, 8px);
+  padding: 10px;
+  text-align: center; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.agent-card:hover { border-color: var(--color-border-primary); }
+.agent-icon-wrap { width: 32px; height: 32px; border-radius: 8px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; }
+.agent-icon-wrap i { font-size: 16px; }
+.ai-green { background: var(--green-50); } .ai-green i { color: var(--green-600); }
+.ai-blue { background: var(--blue-50); } .ai-blue i { color: var(--blue-600); }
+.ai-amber { background: var(--amber-50); } .ai-amber i { color: var(--amber-600); }
+.ai-teal { background: var(--teal-50); } .ai-teal i { color: var(--teal-600); }
+.ai-coral { background: var(--coral-50); } .ai-coral i { color: var(--coral-600); }
+.agent-name { font-size: 11px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 2px; }
+.agent-status { font-size: 10px; color: var(--color-text-tertiary); }
+.status-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 3px; vertical-align: middle; }
+.sd-active { background: var(--green-200); }
+.sd-idle { background: var(--color-border-secondary); }
+
+.mini-chart { display: flex; align-items: flex-end; gap: 3px; height: 48px; }
+.bar { border-radius: 2px 2px 0 0; flex: 1; opacity: 0.85; }
+.bbl { background: var(--blue-200); }
+.bbg { background: var(--green-200); }
+.bba { background: var(--amber-200); }
+
+.wide-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg, 12px); padding: 14px 16px; margin-bottom: 12px; }
+.weather-row { display: flex; gap: 10px; }
+.weather-item { flex: 1; text-align: center; padding: 8px; background: var(--color-background-secondary); border-radius: 8px; }
+.weather-day { font-size: 10px; color: var(--color-text-tertiary); margin-bottom: 4px; }
+.weather-icon { font-size: 18px; margin-bottom: 2px; }
+.weather-temp { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.weather-cond { font-size: 10px; color: var(--color-text-secondary); }
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon"><i class="ti ti-leaf" aria-hidden="true"></i></div>
+      <div>
+        <div class="logo-text">AgriGuard AI</div>
+        <div class="logo-sub">Smart Agriculture Platform</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="badge-cica">CICA Member Network</span>
+      <div class="avatar">RA</div>
+    </div>
+  </div>
+
+  <div class="sidebar" role="navigation" aria-label="Main navigation">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard</div>
+    <div class="nav-item"><i class="ti ti-3d-cube-sphere" aria-hidden="true"></i> Digital Farm Twin</div>
+
+    <div class="nav-section">AI Agents</div>
+    <div class="nav-item"><i class="ti ti-plant" aria-hidden="true"></i> Crop Health <span class="nav-dot dot-green"></span></div>
+    <div class="nav-item"><i class="ti ti-droplet" aria-hidden="true"></i> Water Mgmt <span class="nav-dot dot-amber"></span></div>
+    <div class="nav-item"><i class="ti ti-cloud-storm" aria-hidden="true"></i> Climate Risk <span class="nav-dot dot-green"></span></div>
+    <div class="nav-item"><i class="ti ti-trending-up" aria-hidden="true"></i> Yield Hub</div>
+    <div class="nav-item"><i class="ti ti-building-store" aria-hidden="true"></i> Market Intel</div>
+
+    <div class="nav-section">Reports</div>
+    <div class="nav-item"><i class="ti ti-file-analytics" aria-hidden="true"></i> Analytics</div>
+    <div class="nav-item"><i class="ti ti-world" aria-hidden="true"></i> CICA Portal <span class="nav-dot dot-green"></span></div>
+
+    <div class="nav-section">System</div>
+    <div class="nav-item"><i class="ti ti-settings" aria-hidden="true"></i> Settings</div>
+  </div>
+
+  <div class="main" role="main">
+    <h2 class="sr-only">AgriGuard AI farm management dashboard</h2>
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Crop yield forecast</div>
+        <div class="metric-val val-green">+24%</div>
+        <div class="metric-sub sub-up">↑ vs last season</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Water efficiency</div>
+        <div class="metric-val val-blue">67%</div>
+        <div class="metric-sub sub-up">↑ +12pp this month</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Disease risk score</div>
+        <div class="metric-val val-amber">Low</div>
+        <div class="metric-sub" style="color:var(--color-text-tertiary)">3 zones monitored</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Active farm regions</div>
+        <div class="metric-val val-teal">12</div>
+        <div class="metric-sub" style="color:var(--color-text-tertiary)">4 CICA countries</div>
+      </div>
+    </div>
+
+    <div class="section-title"><i class="ti ti-robot" aria-hidden="true"></i> Virtual AI Farming Agents</div>
+    <div class="agents-row">
+      <div class="agent-card" onclick="sendPrompt('Tell me more about the Crop Health Agent in AgriGuard AI')">
+        <div class="agent-icon-wrap ai-green"><i class="ti ti-plant-2" aria-hidden="true"></i></div>
+        <div class="agent-name">Crop Health</div>
+        <div class="agent-status"><span class="status-dot sd-active"></span>Active</div>
+      </div>
+      <div class="agent-card" onclick="sendPrompt('Tell me more about the Water Management Agent')">
+        <div class="agent-icon-wrap ai-blue"><i class="ti ti-droplet-half-2" aria-hidden="true"></i></div>
+        <div class="agent-name">Water Mgmt</div>
+        <div class="agent-status"><span class="status-dot sd-active"></span>Active</div>
+      </div>
+      <div class="agent-card" onclick="sendPrompt('Tell me more about the Climate Agent')">
+        <div class="agent-icon-wrap ai-amber"><i class="ti ti-cloud-rain" aria-hidden="true"></i></div>
+        <div class="agent-name">Climate</div>
+        <div class="agent-status"><span class="status-dot sd-active"></span>Active</div>
+      </div>
+      <div class="agent-card" onclick="sendPrompt('Tell me more about the Market Intelligence Agent')">
+        <div class="agent-icon-wrap ai-teal"><i class="ti ti-chart-line" aria-hidden="true"></i></div>
+        <div class="agent-name">Market Intel</div>
+        <div class="agent-status"><span class="status-dot sd-idle"></span>Standby</div>
+      </div>
+      <div class="agent-card" onclick="sendPrompt('Tell me more about the Sustainability Agent')">
+        <div class="agent-icon-wrap ai-coral"><i class="ti ti-recycle" aria-hidden="true"></i></div>
+        <div class="agent-name">Sustainability</div>
+        <div class="agent-status"><span class="status-dot sd-active"></span>Active</div>
+      </div>
+    </div>
+
+    <div class="cards-row">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Crop health index</span>
+          <span class="pill pill-green">All regions</span>
+        </div>
+        <div class="crop-list">
+          <div class="crop-row">
+            <span class="crop-name">Wheat</span>
+            <div class="progress-bg"><div class="progress-fill p-green" style="width:82%"></div></div>
+            <span class="crop-pct">82%</span>
+          </div>
+          <div class="crop-row">
+            <span class="crop-name">Rice</span>
+            <div class="progress-bg"><div class="progress-fill p-teal" style="width:76%"></div></div>
+            <span class="crop-pct">76%</span>
+          </div>
+          <div class="crop-row">
+            <span class="crop-name">Maize</span>
+            <div class="progress-bg"><div class="progress-fill p-blue" style="width:91%"></div></div>
+            <span class="crop-pct">91%</span>
+          </div>
+          <div class="crop-row">
+            <span class="crop-name">Cotton</span>
+            <div class="progress-bg"><div class="progress-fill p-amber" style="width:58%"></div></div>
+            <span class="crop-pct">58%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">AI risk alerts</span>
+          <span class="pill pill-amber">2 warnings</span>
+        </div>
+        <div class="alert-list">
+          <div class="alert-item alert-warn">
+            <i class="ti ti-alert-triangle alert-icon icon-warn" aria-hidden="true"></i>
+            <div>
+              <div class="alert-text">Drought risk elevated — Punjab zone C</div>
+              <div class="alert-meta">Climate Agent · 2h ago</div>
+            </div>
+          </div>
+          <div class="alert-item alert-danger">
+            <i class="ti ti-bug alert-icon icon-danger" aria-hidden="true"></i>
+            <div>
+              <div class="alert-text">Aphid outbreak predicted — cotton fields</div>
+              <div class="alert-meta">Crop Health Agent · 4h ago</div>
+            </div>
+          </div>
+          <div class="alert-item alert-info">
+            <i class="ti ti-droplet alert-icon icon-info" aria-hidden="true"></i>
+            <div>
+              <div class="alert-text">Irrigation schedule optimised — 18% water saved</div>
+              <div class="alert-meta">Water Agent · 6h ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wide-card">
+      <div class="card-head">
+        <span class="card-title">7-day climate forecast</span>
+        <span class="pill pill-blue">Region: Punjab, PK</span>
+      </div>
+      <div class="weather-row">
+        <div class="weather-item"><div class="weather-day">Mon</div><div class="weather-icon">☀️</div><div class="weather-temp">38°C</div><div class="weather-cond">Clear</div></div>
+        <div class="weather-item"><div class="weather-day">Tue</div><div class="weather-icon">🌤</div><div class="weather-temp">36°C</div><div class="weather-cond">Partly cloudy</div></div>
+        <div class="weather-item"><div class="weather-day">Wed</div><div class="weather-icon">⛅</div><div class="weather-temp">33°C</div><div class="weather-cond">Overcast</div></div>
+        <div class="weather-item"><div class="weather-day">Thu</div><div class="weather-icon">🌧</div><div class="weather-temp">28°C</div><div class="weather-cond">Rain likely</div></div>
+        <div class="weather-item"><div class="weather-day">Fri</div><div class="weather-icon">⛈</div><div class="weather-temp">26°C</div><div class="weather-cond">Thunderstorm</div></div>
+        <div class="weather-item"><div class="weather-day">Sat</div><div class="weather-icon">🌦</div><div class="weather-temp">30°C</div><div class="weather-cond">Showers</div></div>
+        <div class="weather-item"><div class="weather-day">Sun</div><div class="weather-icon">☀️</div><div class="weather-temp">35°C</div><div class="weather-cond">Clear</div></div>
+      </div>
+    </div>
+
+    <div class="cards-row">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Monthly yield trend</span>
+          <span class="pill pill-teal">tonnes/ha</span>
+        </div>
+        <div class="mini-chart" aria-label="Monthly yield bar chart">
+          <div class="bar bbl" style="height:30px" title="Jan"></div>
+          <div class="bar bbl" style="height:35px" title="Feb"></div>
+          <div class="bar bbg" style="height:28px" title="Mar"></div>
+          <div class="bar bbg" style="height:40px" title="Apr"></div>
+          <div class="bar bba" style="height:32px" title="May"></div>
+          <div class="bar bbg" style="height:45px" title="Jun"></div>
+          <div class="bar bbg" style="height:48px" title="Jul"></div>
+        </div>
+        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:6px">Jan – Jul 2026</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">CICA cooperation status</span>
+          <span class="pill pill-green">4 active</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;color:var(--color-text-secondary)">Pakistan</span>
+            <span class="pill pill-green">Synced</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;color:var(--color-text-secondary)">Kazakhstan</span>
+            <span class="pill pill-green">Synced</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;color:var(--color-text-secondary)">Iran</span>
+            <span class="pill pill-amber">Pending</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;color:var(--color-text-secondary)">China</span>
+            <span class="pill pill-blue">In review</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
