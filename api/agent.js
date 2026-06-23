@@ -72,7 +72,25 @@ Respond concisely (2-4 short paragraphs max). Recommend eco-friendly practices t
   },
 };
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const FALLBACK_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+
+async function callGemini(apiKey, model, systemPrompt, message) {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ role: 'user', parts: [{ text: message.trim() }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+      }),
+    }
+  );
+  const data = await res.json();
+  return { res, data };
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -106,43 +124,29 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: agent.systemPrompt }],
-          },
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: message.trim() }],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1024,
-          },
-        }),
+    const modelsToTry = [PRIMARY_MODEL, ...FALLBACK_MODELS.filter((m) => m !== PRIMARY_MODEL)];
+    let lastError = 'Gemini API request failed';
+
+    for (const model of modelsToTry) {
+      const { res: geminiRes, data } = await callGemini(apiKey, model, agent.systemPrompt, message);
+
+      if (geminiRes.ok) {
+        const reply =
+          data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+          'No response generated. Please try again.';
+        return res.status(200).json({ agent: agent.name, reply, model });
       }
-    );
 
-    const data = await geminiRes.json();
+      lastError = data?.error?.message || lastError;
 
-    if (!geminiRes.ok) {
-      const errMsg = data?.error?.message || 'Gemini API request failed';
-      return res.status(geminiRes.status).json({ error: errMsg });
+      // Retry on overload (503) or rate limit (429) with next model
+      if (geminiRes.status !== 503 && geminiRes.status !== 429) {
+        return res.status(geminiRes.status).json({ error: lastError });
+      }
     }
 
-    const reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      'No response generated. Please try again.';
-
-    return res.status(200).json({
-      agent: agent.name,
-      reply,
+    return res.status(503).json({
+      error: `${lastError} Try again in a minute, or set GEMINI_MODEL=gemini-2.0-flash in Vercel env vars.`,
     });
   } catch (err) {
     console.error('Agent API error:', err);
