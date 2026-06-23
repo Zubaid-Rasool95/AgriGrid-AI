@@ -1030,7 +1030,7 @@ body {
       <div class="chat-agent-icon" id="chatAgentIcon"><i class="ti ti-robot"></i></div>
       <div>
         <div class="chat-agent-name" id="chatAgentName">AI Agent</div>
-        <div class="chat-agent-status" id="chatAgentStatus">Powered by Google Gemini</div>
+        <div class="chat-agent-status" id="chatAgentStatus">Powered by Groq</div>
       </div>
     </div>
     <button class="chat-close" onclick="closeAgentChat()" aria-label="Close chat"><i class="ti ti-x"></i></button>
@@ -1170,7 +1170,7 @@ function openAgent(agentId, initialMessage) {
 
   currentAgent = agentId;
   document.getElementById('chatAgentName').textContent = config.name;
-  document.getElementById('chatAgentStatus').textContent = 'Powered by Google Gemini';
+  document.getElementById('chatAgentStatus').textContent = 'Powered by Groq';
   document.getElementById('chatAgentIcon').className = 'chat-agent-icon ' + config.colorClass;
   document.getElementById('chatAgentIcon').innerHTML = '<i class="ti ' + config.icon + '"></i>';
 
@@ -1252,7 +1252,7 @@ async function sendChatMessage(overrideText) {
     }
   } catch (err) {
     loadingEl.remove();
-    appendMessage('error', 'Could not reach the agent. Make sure the API is deployed on Vercel with Gemini keys configured.');
+    appendMessage('error', 'Could not reach the agent. Make sure the API is deployed on Vercel with Groq API keys configured.');
   }
 
   isLoading = false;
